@@ -7,7 +7,7 @@ import { info, success, warning } from "./messages-slice";
 import { RootState } from "../store";
 import { ethers } from "ethers";
 import { metamaskErrorWrap } from "../../helpers/metamask-error-wrap";
-import { wMemoTokenContract } from "../../abi";
+import { wsShrkTokenContract } from "../../abi";
 import { clearPendingTxn, fetchPendingTxns, getWrappingTypeText } from "./pending-txns-slice";
 import { getGasPrice } from "../../helpers/get-gas-price";
 import { fetchAccountSuccess, getBalances } from "./account-slice";
@@ -26,13 +26,13 @@ export const changeApproval = createAsyncThunk("wrapping/changeApproval", async 
 
     const addresses = getAddresses(networkID);
     const signer = provider.getSigner();
-    const memoContract = new ethers.Contract(addresses.MEMO_ADDRESS, wMemoTokenContract, signer);
+    const sshrkContract = new ethers.Contract(addresses.SSHRK_ADDRESS, wsShrkTokenContract, signer);
 
     let approveTx;
     try {
         const gasPrice = await getGasPrice(provider);
 
-        approveTx = await memoContract.approve(addresses.WMEMO_ADDRESS, ethers.constants.MaxUint256, { gasPrice });
+        approveTx = await sshrkContract.approve(addresses.WSSHRK_ADDRESS, ethers.constants.MaxUint256, { gasPrice });
 
         const text = "Approve Wrapping";
         const pendingTxnType = "approve_wrapping";
@@ -50,12 +50,12 @@ export const changeApproval = createAsyncThunk("wrapping/changeApproval", async 
 
     await sleep(2);
 
-    const wmemoAllowance = await memoContract.allowance(address, addresses.WMEMO_ADDRESS);
+    const wsshrkAllowance = await sshrkContract.allowance(address, addresses.WSSHRK_ADDRESS);
 
     return dispatch(
         fetchAccountSuccess({
             wrapping: {
-                wmemo: Number(wmemoAllowance),
+                wsshrk: Number(wsshrkAllowance),
             },
         }),
     );
@@ -78,7 +78,7 @@ export const changeWrap = createAsyncThunk("wrapping/changeWrap", async ({ isWra
     const addresses = getAddresses(networkID);
     const signer = provider.getSigner();
     const amountInWei = isWrap ? ethers.utils.parseUnits(value, "gwei") : ethers.utils.parseEther(value);
-    const wmemoContract = new ethers.Contract(addresses.WMEMO_ADDRESS, wMemoTokenContract, signer);
+    const wsshrkContract = new ethers.Contract(addresses.WSSHRK_ADDRESS, wsShrkTokenContract, signer);
 
     let wrapTx;
 
@@ -86,9 +86,9 @@ export const changeWrap = createAsyncThunk("wrapping/changeWrap", async ({ isWra
         const gasPrice = await getGasPrice(provider);
 
         if (isWrap) {
-            wrapTx = await wmemoContract.wrap(amountInWei, { gasPrice });
+            wrapTx = await wsshrkContract.wrap(amountInWei, { gasPrice });
         } else {
-            wrapTx = await wmemoContract.unwrap(amountInWei, { gasPrice });
+            wrapTx = await wsshrkContract.unwrap(amountInWei, { gasPrice });
         }
 
         const pendingTxnType = isWrap ? "wrapping" : "unwrapping";
@@ -124,14 +124,14 @@ const calcWrapValue = async ({ isWrap, value, provider, networkID }: IWrapDetail
 
     let wrapValue = 0;
 
-    const wmemoContract = new ethers.Contract(addresses.WMEMO_ADDRESS, wMemoTokenContract, provider);
+    const wsshrkContract = new ethers.Contract(addresses.WSSHRK_ADDRESS, wsShrkTokenContract, provider);
 
     if (isWrap) {
-        const wmemoValue = await wmemoContract.MEMOTowMEMO(amountInWei);
-        wrapValue = wmemoValue / Math.pow(10, 18);
+        const wsshrkValue = await wsshrkContract.MEMOTowMEMO(amountInWei);
+        wrapValue = wsshrkValue / Math.pow(10, 18);
     } else {
-        const memoValue = await wmemoContract.wMEMOToMEMO(amountInWei);
-        wrapValue = memoValue / Math.pow(10, 9);
+        const sshrkValue = await wsshrkContract.wMEMOToMEMO(amountInWei);
+        wrapValue = sshrkValue / Math.pow(10, 9);
     }
 
     return wrapValue;

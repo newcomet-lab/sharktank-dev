@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { getAddresses } from "../../constants";
-import { TimeTokenContract, MemoTokenContract, MimTokenContract, wMemoTokenContract } from "../../abi";
+import { ShrkTokenContract, sShrkTokenContract, MimTokenContract, wsShrkTokenContract } from "../../abi";
 import { setAll } from "../../helpers";
 
 import { createSlice, createSelector, createAsyncThunk } from "@reduxjs/toolkit";
@@ -19,27 +19,27 @@ interface IGetBalances {
 
 interface IAccountBalances {
     balances: {
-        memo: string;
-        time: string;
-        wmemo: string;
+        sshrk: string;
+        shrk: string;
+        wsshrk: string;
     };
 }
 
 export const getBalances = createAsyncThunk("account/getBalances", async ({ address, networkID, provider }: IGetBalances): Promise<IAccountBalances> => {
     const addresses = getAddresses(networkID);
 
-    const memoContract = new ethers.Contract(addresses.MEMO_ADDRESS, MemoTokenContract, provider);
-    const memoBalance = await memoContract.balanceOf(address);
-    const timeContract = new ethers.Contract(addresses.TIME_ADDRESS, TimeTokenContract, provider);
-    const timeBalance = await timeContract.balanceOf(address);
-    const wmemoContract = new ethers.Contract(addresses.WMEMO_ADDRESS, wMemoTokenContract, provider);
-    const wmemoBalance = await wmemoContract.balanceOf(address);
+    const sshrkContract = new ethers.Contract(addresses.SSHRK_ADDRESS, sShrkTokenContract, provider);
+    const sshrkBalance = await sshrkContract.balanceOf(address);
+    const shrkContract = new ethers.Contract(addresses.SHRK_ADDRESS, ShrkTokenContract, provider);
+    const shrkBalance = await shrkContract.balanceOf(address);
+    const wsshrkContract = new ethers.Contract(addresses.WSSHRK_ADDRESS, wsShrkTokenContract, provider);
+    const wsshrkBalance = await wsshrkContract.balanceOf(address);
 
     return {
         balances: {
-            memo: ethers.utils.formatUnits(memoBalance, "gwei"),
-            time: ethers.utils.formatUnits(timeBalance, "gwei"),
-            wmemo: ethers.utils.formatEther(wmemoBalance),
+            sshrk: ethers.utils.formatUnits(sshrkBalance, "gwei"),
+            shrk: ethers.utils.formatUnits(shrkBalance, "gwei"),
+            wsshrk: ethers.utils.formatEther(wsshrkBalance),
         },
     };
 });
@@ -52,64 +52,64 @@ interface ILoadAccountDetails {
 
 interface IUserAccountDetails {
     balances: {
-        time: string;
-        memo: string;
-        wmemo: string;
+        shrk: string;
+        sshrk: string;
+        wsshrk: string;
     };
     staking: {
-        time: number;
-        memo: number;
+        shrk: number;
+        sshrk: number;
     };
     wrapping: {
-        memo: number;
+        sshrk: number;
     };
 }
 
 export const loadAccountDetails = createAsyncThunk("account/loadAccountDetails", async ({ networkID, provider, address }: ILoadAccountDetails): Promise<IUserAccountDetails> => {
-    let timeBalance = 0;
-    let memoBalance = 0;
+    let shrkBalance = 0;
+    let sshrkBalance = 0;
 
-    let wmemoBalance = 0;
-    let memoWmemoAllowance = 0;
+    let wsshrkBalance = 0;
+    let sshrkWsshrkAllowance = 0;
 
     let stakeAllowance = 0;
     let unstakeAllowance = 0;
 
     const addresses = getAddresses(networkID);
 
-    if (addresses.TIME_ADDRESS) {
-        const timeContract = new ethers.Contract(addresses.TIME_ADDRESS, TimeTokenContract, provider);
-        timeBalance = await timeContract.balanceOf(address);
-        stakeAllowance = await timeContract.allowance(address, addresses.STAKING_HELPER_ADDRESS);
+    if (addresses.SHRK_ADDRESS) {
+        const shrkContract = new ethers.Contract(addresses.SHRK_ADDRESS, ShrkTokenContract, provider);
+        shrkBalance = await shrkContract.balanceOf(address);
+        stakeAllowance = await shrkContract.allowance(address, addresses.STAKING_HELPER_ADDRESS);
     }
 
-    if (addresses.MEMO_ADDRESS) {
-        const memoContract = new ethers.Contract(addresses.MEMO_ADDRESS, MemoTokenContract, provider);
-        memoBalance = await memoContract.balanceOf(address);
-        unstakeAllowance = await memoContract.allowance(address, addresses.STAKING_ADDRESS);
+    if (addresses.SSHRK_ADDRESS) {
+        const sshrkContract = new ethers.Contract(addresses.SSHRK_ADDRESS, sShrkTokenContract, provider);
+        sshrkBalance = await sshrkContract.balanceOf(address);
+        unstakeAllowance = await sshrkContract.allowance(address, addresses.STAKING_ADDRESS);
 
-        if (addresses.WMEMO_ADDRESS) {
-            memoWmemoAllowance = await memoContract.allowance(address, addresses.WMEMO_ADDRESS);
+        if (addresses.WSSHRK_ADDRESS) {
+            sshrkWsshrkAllowance = await sshrkContract.allowance(address, addresses.WSSHRK_ADDRESS);
         }
     }
 
-    if (addresses.WMEMO_ADDRESS) {
-        const wmemoContract = new ethers.Contract(addresses.WMEMO_ADDRESS, wMemoTokenContract, provider);
-        wmemoBalance = await wmemoContract.balanceOf(address);
+    if (addresses.WSSHRK_ADDRESS) {
+        const wsshrkContract = new ethers.Contract(addresses.WSSHRK_ADDRESS, wsShrkTokenContract, provider);
+        wsshrkBalance = await wsshrkContract.balanceOf(address);
     }
 
     return {
         balances: {
-            memo: ethers.utils.formatUnits(memoBalance, "gwei"),
-            time: ethers.utils.formatUnits(timeBalance, "gwei"),
-            wmemo: ethers.utils.formatEther(wmemoBalance),
+            sshrk: ethers.utils.formatUnits(sshrkBalance, "gwei"),
+            shrk: ethers.utils.formatUnits(shrkBalance, "gwei"),
+            wsshrk: ethers.utils.formatEther(wsshrkBalance),
         },
         staking: {
-            time: Number(stakeAllowance),
-            memo: Number(unstakeAllowance),
+            shrk: Number(stakeAllowance),
+            sshrk: Number(unstakeAllowance),
         },
         wrapping: {
-            memo: Number(memoWmemoAllowance),
+            sshrk: Number(sshrkWsshrkAllowance),
         },
     };
 });
@@ -246,17 +246,17 @@ export const calculateUserTokenDetails = createAsyncThunk("account/calculateUser
 export interface IAccountSlice {
     bonds: { [key: string]: IUserBondDetails };
     balances: {
-        memo: string;
-        time: string;
-        wmemo: string;
+        sshrk: string;
+        shrk: string;
+        wsshrk: string;
     };
     loading: boolean;
     staking: {
-        time: number;
-        memo: number;
+        shrk: number;
+        sshrk: number;
     };
     wrapping: {
-        memo: number;
+        sshrk: number;
     };
     tokens: { [key: string]: IUserTokenDetails };
 }
@@ -264,9 +264,9 @@ export interface IAccountSlice {
 const initialState: IAccountSlice = {
     loading: true,
     bonds: {},
-    balances: { memo: "", time: "", wmemo: "" },
-    staking: { time: 0, memo: 0 },
-    wrapping: { memo: 0 },
+    balances: { sshrk: "", shrk: "", wsshrk: "" },
+    staking: { shrk: 0, sshrk: 0 },
+    wrapping: { sshrk: 0 },
     tokens: {},
 };
 

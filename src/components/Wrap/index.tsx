@@ -26,11 +26,11 @@ function Wrap({ open, handleClose }: IAdvancedSettingsProps) {
 
     const isAppLoading = useSelector<IReduxState, boolean>(state => state.app.loading);
 
-    const memoBalance = useSelector<IReduxState, string>(state => {
-        return state.account.balances && state.account.balances.memo;
+    const sshrkBalance = useSelector<IReduxState, string>(state => {
+        return state.account.balances && state.account.balances.sshrk;
     });
-    const wmemoBalance = useSelector<IReduxState, string>(state => {
-        return state.account.balances && state.account.balances.wmemo;
+    const wsshrkBalance = useSelector<IReduxState, string>(state => {
+        return state.account.balances && state.account.balances.wsshrk;
     });
 
     const wrapValue = useSelector<IReduxState, string>(state => {
@@ -45,8 +45,8 @@ function Wrap({ open, handleClose }: IAdvancedSettingsProps) {
         return state.pendingTransactions;
     });
 
-    const memoAllowance = useSelector<IReduxState, number>(state => {
-        return state.account.wrapping && state.account.wrapping.memo;
+    const sshrkAllowance = useSelector<IReduxState, number>(state => {
+        return state.account.wrapping && state.account.wrapping.sshrk;
     });
 
     const [isWrap, setIsWrap] = useState(true);
@@ -54,9 +54,9 @@ function Wrap({ open, handleClose }: IAdvancedSettingsProps) {
 
     const setMax = () => {
         if (isWrap) {
-            setValue(memoBalance);
+            setValue(sshrkBalance);
         } else {
-            setValue(wmemoBalance);
+            setValue(wsshrkBalance);
         }
     };
 
@@ -88,12 +88,12 @@ function Wrap({ open, handleClose }: IAdvancedSettingsProps) {
         handleClose();
     };
 
-    const hasAllowance = useCallback(() => memoAllowance > 0, [memoAllowance]);
+    const hasAllowance = useCallback(() => sshrkAllowance > 0, [sshrkAllowance]);
 
-    const trimmedMemoBalance = trim(Number(memoBalance), 6);
-    const trimmedWmemoBalance = trim(Number(wmemoBalance), 6);
+    const trimmedsShrkBalance = trim(Number(sshrkBalance), 6);
+    const trimmedWsshrkBalance = trim(Number(wsshrkBalance), 6);
 
-    const getBalance = () => (isWrap ? `${trimmedMemoBalance} MEMO` : `${trimmedWmemoBalance} wMEMO`);
+    const getBalance = () => (isWrap ? `${trimmedsShrkBalance} SSHRK` : `${trimmedWsshrkBalance} wSSHRK`);
 
     const handleOnWrap = async () => {
         if (await checkWrongNetwork()) return;
@@ -121,7 +121,7 @@ function Wrap({ open, handleClose }: IAdvancedSettingsProps) {
                     </IconButton>
                     <div className="wrap-price" onClick={() => setIsWrapPrice(!isWrapPrice)}>
                         <p>
-                            1 {isWrapPrice ? "MEMO" : "wMEMO"} = {`${trim(wrapPrice, 4)} ${isWrapPrice ? "wMEMO" : "MEMO"}`}
+                            1 {isWrapPrice ? "SSHRK" : "wSSHRK"} = {`${trim(wrapPrice, 4)} ${isWrapPrice ? "wSSHRK" : "SSHRK"}`}
                         </p>
                     </div>
                 </div>
@@ -142,7 +142,7 @@ function Wrap({ open, handleClose }: IAdvancedSettingsProps) {
                         startAdornment={
                             <InputAdornment position="start">
                                 <div className="wrap-action-input-text">
-                                    <p>{isWrap ? "MEMO" : "wMEMO"}</p>
+                                    <p>{isWrap ? "SSHRK" : "wSSHRK"}</p>
                                 </div>
                             </InputAdornment>
                         }
@@ -169,7 +169,7 @@ function Wrap({ open, handleClose }: IAdvancedSettingsProps) {
                         startAdornment={
                             <InputAdornment position="start">
                                 <div className="wrap-action-input-text">
-                                    <p>{isWrap ? "wMEMO" : "MEMO"}</p>
+                                    <p>{isWrap ? "wSSHRK" : "SSHRK"}</p>
                                 </div>
                             </InputAdornment>
                         }
